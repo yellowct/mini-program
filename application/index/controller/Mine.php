@@ -9,7 +9,9 @@ class Mine
 {
     public function get_userInfo()
     {
-        $openid = Cache::get('openid');
+        $open=$_REQUEST['open'];
+        $openid = Cache::get($open);
+        // echo $openid;
         $userInfo = Db::name('user')->where('openid', $openid)->find();
         return json_encode($userInfo);
     }
@@ -17,7 +19,8 @@ class Mine
     //获取用户积分
     public function get_integral()
     {
-        $openid = Cache::get('openid');
+        $open=$_REQUEST['open'];
+        $openid = Cache::get($open);
         $integral = Db::name('user_integral')->alias('a')
             ->join('user b', 'b.user_id=a.user_id')
             ->join('integral c', 'c.integral_id=a.integral_id')
@@ -27,7 +30,8 @@ class Mine
 
     public function get_list()
     {
-        $openid = Cache::get('openid');
+        $open=$_REQUEST['open'];
+        $openid = Cache::get($open);
         $log =  Db::name('log')->alias('a')
             ->join('user b', 'b.user_id=a.user_id')
             ->limit(10)
@@ -128,10 +132,12 @@ class Mine
     public function read()
     {
         $index = $_REQUEST['index'];
+        $open=$_REQUEST['open'];
+        $openid = Cache::get($open);
         $item = json_decode($_REQUEST['item'], true);
         foreach ($item as $key => $value) {
             $data = [
-                'user_id' => Db::name('user')->where('openid', Cache::get('openid'))->value('user_id'),
+                'user_id' => Db::name('user')->where('openid', $openid)->value('user_id'),
                 'read_id' => $value['id'],
                 'type' => $index
             ];
@@ -141,6 +147,7 @@ class Mine
 
     public function set_score()
     {
+        
         $parentIndex = $_GET['parentIndex'];
         $id = $_GET['id'];
         $score = $_GET['score'];
@@ -153,8 +160,10 @@ class Mine
     }
     public function update_name()
     {
+        $open=$_REQUEST['open'];
+        $openid = Cache::get($open);
         $real_name = $_GET['real_name'];
-        $res = Db::name('user')->where('openid', Cache::get('openid'))->setField('real_name', $real_name);
+        $res = Db::name('user')->where('openid', $openid)->setField('real_name', $real_name);
         if ($res) {
             return '修改成功';
         }

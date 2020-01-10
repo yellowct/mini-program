@@ -10,7 +10,7 @@ class Index
 {
     public function index()
     {
-        return 'session';
+        
     }
 
     public function get_openid()
@@ -24,20 +24,27 @@ class Index
         $array = get_object_vars($jsondecode); //转换成数组
         $openid = $array['openid']; //输出openid
         $session_key = $array['session_key'];
-        echo $session_key;
         //为openid设置缓存
-        Cache::set('openid', $openid);
-        Cache::set('session_key', $session_key);
-        // session('session_key', $session_key);
-        return $openid;
+        // Cache::set('openid', $openid);
+        // Cache::set('session_key', $session_key);
+        $open=create_code();
+        $sess=create_code();
+        Cache::set($open,$openid,7200);
+        Cache::set($sess,$session_key,7200);
+        // session($open, $openid);
+        // session($sess,$session_key);
+        // echo session($openid_key);
+        $data=['open'=>$open,'sess'=>$sess];
+        return json_encode($data);
     }
 
     //保存用户信息
     public function user_insert()
     {
-        $openid = $_REQUEST['openid'];
+        $open=$_REQUEST['open'];
+        $openid = Cache::get($open);
         $user = $_REQUEST['user'];
-        $user = json_decode($user, true);
+        $user = json_decode($user, true); 
         $sql = Db::name('user')->where('openid', $openid)->count();
         if ($sql !== 1) {
             $data = [
@@ -56,7 +63,8 @@ class Index
     //身份鉴定
     public function check()
     {
-        $openid = Cache::get('openid');
+        $open=$_REQUEST['open'];
+        $openid = Cache::get($open);
         $type = Db::name('user')->where('openid', $openid)->value('type');
         return $type;
     }
@@ -66,18 +74,18 @@ class Index
         $encryptedData = $_REQUEST['encryptedData'];
         $iv = $_REQUEST['iv'];
         $sessionKey = Cache::get('session_key');
-        echo ($sessionKey);
+        // echo ($sessionKey);
         $appid = 'wx0a26ad2d7d081bf3';
         include_once "public/wxBizDataCrypt.php";
         $pc = new WXBizDataCrypt($appid, $sessionKey);
         $errCode = $pc->decryptData($encryptedData, $iv, $data);
-        
+
 
         if ($errCode == 0) {
-            $data=json_decode($data,true);
-            $step=$data['stepInfoList'][29]['step'];
-            dump($data) ;
-            Db::name('user')->where('openid',Cache::get('openid'))->setField('step',$step);
+            $data = json_decode($data, true);
+            $step = $data['stepInfoList'][29]['step'];
+            dump($data);
+            Db::name('user')->where('openid', $openid)->setField('step', $step);
         } else {
             // print($errCode . "\n");  
             return $errCode;

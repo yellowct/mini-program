@@ -9,7 +9,8 @@ class Funding
 {
     public function index()
     {
-        $openid = Cache::get('openid');
+        $open = $_REQUEST['open'];
+        $openid = Cache::get($open);
         $data = Db::name('funding')->alias('a')->join('user b', 'a.organiser=b.real_name')
             ->where('b.openid', $openid)->where('a.status', 0)->field('a.id,a.content,a.status')->find();
         $data = json_encode($data);
@@ -18,7 +19,8 @@ class Funding
 
     public function insert()
     {
-        $openid = Cache::get('openid');
+        $open = $_REQUEST['open'];
+        $openid = Cache::get($open);
         $organiser = Db::name('user')->where('openid', $openid)->value('real_name');
         $content = $_REQUEST['content'];
         $data = [
@@ -47,7 +49,8 @@ class Funding
     }
     public function get_list()
     {
-        $openid = Cache::get('openid');
+        $open = $_REQUEST['open'];
+        $openid = Cache::get($open);
         $user = Db::name('user')->where('openid', $openid)->find();
         $join_id = Db::name('funding_participants')->where('participant', $user['user_id'])->column('funding_id');
         if ($user['type'] == 0) {
@@ -74,8 +77,10 @@ class Funding
     }
     public function join()
     {
+        $open = $_REQUEST['open'];
+        $openid = Cache::get($open);
         $id = $_GET['id'];
-        $user = Db::name('user')->where('openid', Cache::get('openid'))->value('user_id');
+        $user = Db::name('user')->where('openid', $openid)->value('user_id');
         $data = ['funding_id' => $id, 'participant' => $user, 'create_time' => time()];
         $join = Db::name('funding_participants')->insert($data);
         //给参加者加分

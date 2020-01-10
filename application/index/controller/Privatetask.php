@@ -9,7 +9,8 @@ class Privatetask
 {
     public function index()
     {
-        $openid = Cache::get('openid');
+         $open=$_REQUEST['open'];
+  $openid = Cache::get($open);
         $data = Db::name('task')->alias('a')->join('user b', 'a.organiser=b.real_name')
             ->where('b.openid', $openid)->where('a.status', 0)->where('a.task_type', 1)
             ->field('a.id,a.content,a.time,a.status,a.limit,a.score,b.type')->find();
@@ -19,7 +20,8 @@ class Privatetask
 
     public function insert()
     {
-        $openid = Cache::get('openid');
+         $open=$_REQUEST['open'];
+  $openid = Cache::get($open);
         $organiser = Db::name('user')->where('openid', $openid)->value('real_name');
         $content = $_REQUEST['content'];
         $date = $_REQUEST['date'];
@@ -48,6 +50,8 @@ class Privatetask
     }
     public function update()
     {
+        $open = $_REQUEST['open'];
+        $openid = Cache::get($open);
         $id = $_REQUEST['id'];
         $content = $_REQUEST['content'];
         $date = $_REQUEST['date'];
@@ -55,7 +59,7 @@ class Privatetask
         $datatime = $date . ' ' . $time . ':00';
         $limit = $_REQUEST['limit'];
         $score = $_REQUEST['score'];
-        $user_score = Db::name('user')->where('openid', Cache::get('openid'))->value('score');
+        $user_score = Db::name('user')->where('openid', $openid)->value('score');
         if ($user_score < $score * $limit) {
             return "积分不足";
         } else {
@@ -75,12 +79,13 @@ class Privatetask
     }
     public function get_list()
     {
-
+        $open = $_REQUEST['open'];
+        $openid = Cache::get($open);
         $list = Db::name('task')->where('status', 0)->where('task_type', 1)->order('create_time desc')->select();
         // dump($list);
         foreach ($list as $key => $value) {
             $list[$key]['num'] = Db::name('task_participants')->where('task_id', $list[$key]['id'])->count();
-            $user = Db::name('user')->where('openid', Cache::get('openid'))->value('real_name');
+            $user = Db::name('user')->where('openid', $openid)->value('real_name');
             // dump($user);
             //开始前10分钟/参与人数已满/用户为组织者，都不能参加
             if (time() > strtotime($list[$key]['time']) - 600 || $list[$key]['limit'] <= $list[$key]['num'] || $list[$key]['organiser'] == $user) {
@@ -92,7 +97,7 @@ class Privatetask
             $res = Db::name('task_participants')->alias('a')
                 ->join('user b', 'a.participant=b.real_name')
                 ->where('a.task_id', $list[$key]['id'])
-                ->where('b.openid', Cache::get('openid'))->find();
+                ->where('b.openid', $openid)->find();
             if ($res) {
                 $list[$key]['join'] = true;
             } else {
@@ -112,8 +117,10 @@ class Privatetask
 
     public function join()
     {
+        $open = $_REQUEST['open'];
+        $openid = Cache::get($open);
         $id = $_GET['id'];
-        $user = Db::name('user')->where('openid', Cache::get('openid'))->find();
+        $user = Db::name('user')->where('openid', $openid)->find();
         $data = ['task_id' => $id, 'participant' => $user['real_name'], 'create_time' => time()];
         $join = Db::name('task_participants')->insert($data);
         if ($join) {

@@ -9,7 +9,8 @@ class Train
 {
     public function index()
     {
-        $openid = Cache::get('openid');
+         $open=$_REQUEST['open'];
+  $openid = Cache::get($open);
         $data = Db::name('train')->alias('a')->join('user b', 'a.organiser=b.real_name')
             ->where('b.openid', $openid)->where('a.status', 0)->field('a.id,a.content,a.time,a.status,a.limit')->find();
         $data = json_encode($data);
@@ -18,7 +19,8 @@ class Train
 
     public function insert()
     {
-        $openid = Cache::get('openid');
+         $open=$_REQUEST['open'];
+  $openid = Cache::get($open);
         $organiser = Db::name('user')->where('openid', $openid)->value('real_name');
         $content = $_REQUEST['content'];
         $date = $_REQUEST['date'];
@@ -59,11 +61,12 @@ class Train
     }
     public function get_list()
     {
-        
+        $open = $_REQUEST['open'];
+        $openid = Cache::get($open);
         $list = Db::name('train')->where('status', 0)->order('create_time desc')->select();
         foreach ($list as $key => $value) {
             $list[$key]['num'] = Db::name('train_participants')->where('train_id', $list[$key]['id'])->count();
-            $user=Db::name('user')->where('openid',Cache::get('openid'))->value('real_name');
+            $user=Db::name('user')->where('openid',$openid)->value('real_name');
             if (time() > strtotime($list[$key]['time']) - 600 || $list[$key]['limit'] <= $list[$key]['num'] || $list[$key]['organiser']==$user) {
                 $list[$key]['disabled'] = true;
             }else{
@@ -73,7 +76,7 @@ class Train
             $res = Db::name('train_participants')->alias('a')
             ->join('user b','a.participant=b.real_name')
             ->where('a.train_id', $list[$key]['id'])
-            ->where('b.openid',Cache::get('openid'))->find();
+            ->where('b.openid',$openid)->find();
             if($res){
                 $list[$key]['join'] = true;
             }else{
@@ -93,8 +96,10 @@ class Train
 
     public function join()
     {
+        $open = $_REQUEST['open'];
+        $openid = Cache::get($open);
         $id = $_GET['id'];
-        $user = Db::name('user')->where('openid', Cache::get('openid'))->find();
+        $user = Db::name('user')->where('openid', $openid)->find();
         $data = ['train_id' => $id, 'participant' => $user['real_name'], 'create_time' => time()];
         $join = Db::name('train_participants')->insert($data);
         if ($join) {
