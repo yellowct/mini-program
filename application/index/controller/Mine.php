@@ -60,14 +60,14 @@ class Mine
             ->join('user b', 'b.real_name=a.participant')
             ->join('activity c', 'a.activity_id=c.id')
             ->where('c.status', 0)->where('b.openid', $openid)
-            ->whereTime('time', 'between', [$startTime, $endTime])
-            ->field('a.id,a.score,c.content,c.time,c.create_time')->order('create_time desc')
+            ->whereTime('end_time', 'between', [$startTime, $endTime])
+            ->field('a.id,a.score,c.content,c.end_time,c.create_time')->order('create_time desc')
             ->distinct(true)->select();
         $count = Db::name('activity_participants')->alias('a')
             ->join('user b', 'b.real_name=a.participant')
             ->join('activity c', 'a.activity_id=c.id')
             ->where('c.status', 0)->where('b.openid', $openid)->where('a.score', 'null')
-            ->whereTime('time', 'between', [$startTime, $endTime])
+            ->whereTime('end_time', 'between', [$startTime, $endTime])
             ->count();
         if ($count && $count != 0) {
             $activity['unread'] = true;
@@ -163,7 +163,16 @@ class Mine
         $open=$_REQUEST['open'];
         $openid = Cache::get($open);
         $real_name = $_GET['real_name'];
-        $res = Db::name('user')->where('openid', $openid)->setField('real_name', $real_name);
+        if($real_name=="杜浈铌" || $real_name=="涂莉"){
+            $type='0';
+        }else{
+            $type='1';
+        }
+        $data=[
+            'real_name'=>$real_name,
+            'type'=>$type
+        ];
+        $res = Db::name('user')->where('openid', $openid)->update($data);
         if ($res) {
             return '修改成功';
         }

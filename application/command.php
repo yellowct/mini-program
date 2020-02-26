@@ -9,4 +9,9 @@
 // | Author: yunwuxin <448901948@qq.com>
 // +----------------------------------------------------------------------
 
-return [];
+return [
+    'app\index\command\Clock',
+    'app\index\command\Step',
+    'app\index\command\Perweek',
+    'app\index\command\Permonth'
+];

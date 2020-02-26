@@ -2,7 +2,6 @@
 
 namespace app\index\controller;
 
-
 use think\Cache;
 use think\Db;
 
@@ -10,29 +9,33 @@ class Activity
 {
     public function index()
     {
-        $open=$_REQUEST['open'];
+        $open = $_REQUEST['open'];
         $openid = Cache::get($open);
         $data = Db::name('activity')->alias('a')->join('user b', 'a.organiser=b.real_name')
-            ->where('b.openid', $openid)->where('a.status', 0)->field('a.id,a.content,a.time,a.status,a.limit')->find();
+            ->where('b.openid', $openid)->where('a.status', 0)->field('a.id,a.content,a.start_time,a.end_time,a.status,a.limit')->find();
         $data = json_encode($data);
         return $data;
     }
     public function insert()
     {
-        $open=$_REQUEST['open'];
+        $open = $_REQUEST['open'];
         $openid = Cache::get($open);
         $organiser = Db::name('user')->where('openid', $openid)->value('real_name');
         $content = $_REQUEST['content'];
-        $date = $_REQUEST['date'];
-        $time = $_REQUEST['time'];
-        $datatime = $date . ' ' . $time . ':00';
+        // $start_date = $_REQUEST['start_date'];
+        $start_time = $_REQUEST['start_time'];
+        // $start_datetime = $start_date . ' ' . $start_time . ':00';
+        // $end_date = $_REQUEST['end_date'];
+        $end_time = $_REQUEST['end_time'];
+        // $end_datetime = $end_date . ' ' . $end_time . ':00';
         $limit = $_REQUEST['limit'];
         $data = [
             'organiser' => $organiser,
             'content' => $content,
-            'time' => $datatime,
-            'create_time' => time(),
-            'limit' => $limit
+            'start_time' => $start_time,
+            'end_time' => $end_time,
+            'create_time' =>time(),
+            'limit' => $limit,
         ];
         $sql = Db::name('activity')->insert($data);
         if ($sql) {
@@ -43,17 +46,21 @@ class Activity
     {
         $id = $_REQUEST['id'];
         $content = $_REQUEST['content'];
-        $date = $_REQUEST['date'];
-        $time = $_REQUEST['time'];
-        $datatime = $date . ' ' . $time . ':00';
+        // $start_date = $_REQUEST['start_date'];
+        $start_time = $_REQUEST['start_time'];
+        // $start_datetime = $start_date . ' ' . $start_time . ':00';
+        // $end_date = $_REQUEST['end_date'];
+        $end_time = $_REQUEST['end_time'];
+        // $end_datetime = $end_date . ' ' . $end_time . ':00';
         $limit = $_REQUEST['limit'];
         $sql = Db::name('activity')
             ->where('id', $id)
             ->update([
                 'content' => $content,
-                'time' => $datatime,
+                'start_time' => $start_time,
+                'end_time' => $end_time,
                 'update_time' => time(),
-                'limit' => $limit
+                'limit' => $limit,
             ]);
         if ($sql) {
             return '修改成功';
@@ -61,13 +68,13 @@ class Activity
     }
     public function get_list()
     {
-        $open=$_REQUEST['open'];
+        $open = $_REQUEST['open'];
         $openid = Cache::get($open);
         $list = Db::name('activity')->where('status', 0)->order('create_time desc')->select();
         foreach ($list as $key => $value) {
             $list[$key]['num'] = Db::name('activity_participants')->where('activity_id', $list[$key]['id'])->count();
-            $user=Db::name('user')->where('openid',$openid)->value('real_name');
-            if (time() > strtotime($list[$key]['time']) - 600 || $list[$key]['limit'] <= $list[$key]['num'] || $list[$key]['organiser']==$user) {
+            $user = Db::name('user')->where('openid', $openid)->value('real_name');
+            if (time() > strtotime($list[$key]['start_time']) - 600 || $list[$key]['limit'] <= $list[$key]['num'] || $list[$key]['organiser'] == $user) {
                 $list[$key]['disabled'] = true;
             } else {
                 $list[$key]['disabled'] = false;
@@ -98,7 +105,7 @@ class Activity
 
     public function join()
     {
-        $open=$_REQUEST['open'];
+        $open = $_REQUEST['open'];
         $openid = Cache::get($open);
         $id = $_GET['id'];
         $user = Db::name('user')->where('openid', $openid)->find();
@@ -110,7 +117,7 @@ class Activity
             return "参加成功";
             // $data = ['user_id' =>$user['user_id'], 'integral_id' => '5', 'create_time' => time()];
             // Db::name('user_integral')->insert($data);
-            // Db::name('user')->where('user_id', $user['user_id'])->setInc('score', 2);     
+            // Db::name('user')->where('user_id', $user['user_id'])->setInc('score', 2);
         }
 
         // }
@@ -119,10 +126,10 @@ class Activity
 
     //自动执行
     public function auto()
-    { 
+    {
         //超过时间三天的活动下架
-        $overTime = date('Y-m-d H:s:m', time() - 86400 * 3);
-        $res = Db::name('activity')->whereTime('time', '<', $overTime)->where('status', 0)->setField('status', 1);
+        $overTime = date('Y-m-d H:i:s', time() - 86400 * 3);
+        $res = Db::name('activity')->whereTime('end_time', '<', $overTime)->where('status', 0)->setField('status', 1);
         //活动下架时评分数超过一半自动加分
         if ($res) {
             $ornagiser = Db::name('activity')->alias('a')->join('user b', 'b.real_name=a.organiser')->field('a.id,a.content,a.limit,b.user_id')->where('a.status', 1)->select();
@@ -145,7 +152,7 @@ class Activity
                         Db::name('user')->where('user_id', $participants[$k]['user_id'])->setInc('score', 2);
                         write_log($participants[$k]['user_id'], '你参加的活动:' . $ornagiser[$key]['content'] . ' 已结束，获得2积分');
                     }
-                }else{
+                } else {
                     //下架但不加分
                     write_log($ornagiser[$key]['user_id'], '你组织的活动:' . $ornagiser[$key]['content'] . ' 已结束，由于评分人数过少，无法获取积分');
                 }

@@ -9,8 +9,8 @@ class Publictask
 {
     public function index()
     {
-         $open=$_REQUEST['open'];
-  $openid = Cache::get($open);
+        $open = $_REQUEST['open'];
+        $openid = Cache::get($open);
         $data = Db::name('task')->alias('a')->join('user b', 'a.organiser=b.real_name')
             ->where('b.openid', $openid)->where('a.status', 0)->where('task_type', 0)
             ->field('a.id,a.content,a.time,a.status,a.limit,a.score,b.type')->find();
@@ -20,8 +20,8 @@ class Publictask
 
     public function insert()
     {
-         $open=$_REQUEST['open'];
-  $openid = Cache::get($open);
+        $open = $_REQUEST['open'];
+        $openid = Cache::get($open);
         $organiser = Db::name('user')->where('openid', $openid)->value('real_name');
         $content = $_REQUEST['content'];
         $date = $_REQUEST['date'];
@@ -35,7 +35,7 @@ class Publictask
             'time' => $datatime,
             'create_time' => time(),
             'limit' => $limit,
-            'score' => $score
+            'score' => $score,
         ];
         $sql = Db::name('task')->insert($data);
         if ($sql) {
@@ -58,7 +58,7 @@ class Publictask
                 'time' => $datatime,
                 'update_time' => time(),
                 'limit' => $limit,
-                'score' => $score
+                'score' => $score,
             ]);
         if ($sql) {
             return '修改成功';

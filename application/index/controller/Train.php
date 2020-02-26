@@ -9,8 +9,8 @@ class Train
 {
     public function index()
     {
-         $open=$_REQUEST['open'];
-  $openid = Cache::get($open);
+        $open = $_REQUEST['open'];
+        $openid = Cache::get($open);
         $data = Db::name('train')->alias('a')->join('user b', 'a.organiser=b.real_name')
             ->where('b.openid', $openid)->where('a.status', 0)->field('a.id,a.content,a.time,a.status,a.limit')->find();
         $data = json_encode($data);
@@ -19,20 +19,20 @@ class Train
 
     public function insert()
     {
-         $open=$_REQUEST['open'];
-  $openid = Cache::get($open);
+        $open = $_REQUEST['open'];
+        $openid = Cache::get($open);
         $organiser = Db::name('user')->where('openid', $openid)->value('real_name');
         $content = $_REQUEST['content'];
         $date = $_REQUEST['date'];
         $time = $_REQUEST['time'];
-        $datatime = $date . ' ' . $time.':00';
+        $datatime = $date . ' ' . $time . ':00';
         $limit = $_REQUEST['limit'];
         $data = [
             'organiser' => $organiser,
             'content' => $content,
             'time' => $datatime,
             'create_time' => time(),
-            'limit'=>$limit
+            'limit' => $limit,
         ];
         $sql = Db::name('train')->insert($data);
         if ($sql) {
@@ -45,7 +45,7 @@ class Train
         $content = $_REQUEST['content'];
         $date = $_REQUEST['date'];
         $time = $_REQUEST['time'];
-        $datatime = $date . ' ' . $time.':00';
+        $datatime = $date . ' ' . $time . ':00';
         $limit = $_REQUEST['limit'];
         $sql = Db::name('train')
             ->where('id', $id)
@@ -53,7 +53,7 @@ class Train
                 'content' => $content,
                 'time' => $datatime,
                 'update_time' => time(),
-                'limit'=>$limit
+                'limit' => $limit,
             ]);
         if ($sql) {
             return '修改成功';
@@ -66,20 +66,20 @@ class Train
         $list = Db::name('train')->where('status', 0)->order('create_time desc')->select();
         foreach ($list as $key => $value) {
             $list[$key]['num'] = Db::name('train_participants')->where('train_id', $list[$key]['id'])->count();
-            $user=Db::name('user')->where('openid',$openid)->value('real_name');
-            if (time() > strtotime($list[$key]['time']) - 600 || $list[$key]['limit'] <= $list[$key]['num'] || $list[$key]['organiser']==$user) {
+            $user = Db::name('user')->where('openid', $openid)->value('real_name');
+            if (time() > strtotime($list[$key]['time']) - 600 || $list[$key]['limit'] <= $list[$key]['num'] || $list[$key]['organiser'] == $user) {
                 $list[$key]['disabled'] = true;
-            }else{
+            } else {
 
                 $list[$key]['disabled'] = false;
             }
             $res = Db::name('train_participants')->alias('a')
-            ->join('user b','a.participant=b.real_name')
-            ->where('a.train_id', $list[$key]['id'])
-            ->where('b.openid',$openid)->find();
-            if($res){
+                ->join('user b', 'a.participant=b.real_name')
+                ->where('a.train_id', $list[$key]['id'])
+                ->where('b.openid', $openid)->find();
+            if ($res) {
                 $list[$key]['join'] = true;
-            }else{
+            } else {
                 $list[$key]['join'] = false;
             }
         }
@@ -103,8 +103,8 @@ class Train
         $data = ['train_id' => $id, 'participant' => $user['real_name'], 'create_time' => time()];
         $join = Db::name('train_participants')->insert($data);
         if ($join) {
-            $content=Db::name('train')->where('id',$id)->value('content');
-            write_log($user['user_id'],'参加培训:'.$content);
+            $content = Db::name('train')->where('id', $id)->value('content');
+            write_log($user['user_id'], '参加培训:' . $content);
             return "参加成功";
         }
 
@@ -136,7 +136,7 @@ class Train
                         Db::name('user')->where('user_id', $participants[$k]['user_id'])->setInc('score', 2);
                         write_log($participants[$k]['user_id'], '你参加的培训:' . $ornagiser[$key]['content'] . ' 已结束，获得2积分');
                     }
-                }else{
+                } else {
                     //下架但不加分
                     write_log($ornagiser[$key]['user_id'], '你组织的培训:' . $ornagiser[$key]['content'] . ' 已结束，由于评分人数过少，无法获取积分');
                 }
