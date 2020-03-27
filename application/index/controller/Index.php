@@ -8,34 +8,6 @@ use WXBizDataCrypt;
 
 class Index
 {
-    public function index()
-    {
-        // // $yesterday=date('Y-m-d',strtotime('-1 day'))
-        // $end = date('Y-m-d', strtotime('-1 month'));
-        // $start = date('Y-m-1', strtotime($end));
-
-        // //统计需要打卡的天数
-        // $list = Db::name('clock')->where('date', 'between', [$start, $end])->where('clock_in', 'not null')->where('clock_out', 'not null')->field('date')->distinct(true)->select();
-        // $count = count($list);
-
-        // $list=Db::name('clock')->where('date','between',[$start,$end])->where('clock_in', 'not null')->where('clock_out', 'not null')
-        //     ->field('user_id,COUNT(*) as total')
-        //     ->group('user_id')
-        //     ->select();
-
-        // foreach ($list as $key => $value) {
-        //     if($list[$key]['total']==$count){
-        //         $res=Db::name('user')->where('user_id',$value['user_id'])->setInc('score',5);
-        //         if ($res) {
-        //             write_log($value['user_id'], '获得5积分（每月工龄分）');
-        //         }
-        //     }
-            
-        // }
-
-        // dump($list);
-    }
-
     public function get_openid()
     {
         $code = $_REQUEST['code'];
