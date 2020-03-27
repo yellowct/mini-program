@@ -163,6 +163,5 @@ class Privatetask
             write_log($participants[$k]['user_id'], '你参加的任务:' . $task['content'] . ' 已结束，你获得了' . $task['score']/$count . '积分');
         }
         }
-       
     }
 }
